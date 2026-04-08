@@ -1,2 +1,297 @@
-# Laminas_123
-Web estática 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FC San Bernardo - Álbum Digital</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=Montserrat:wght@900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        :root {
+            --verde: #016f41;
+            --dorado: #d4af37;
+            --celeste: #00d4ff;
+            --negro: #0a0a0a;
+            --gris-boton: #eeeeee;
+            --texto-boton: #666666;
+            --rojo: #d32f2f;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--negro);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 360px;
+            padding: 25px 20px;
+            border-radius: 30px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+
+        .logo-principal {
+            width: 85px;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.1));
+        }
+
+        .titulo {
+            font-family: 'Montserrat', sans-serif;
+            color: var(--verde);
+            font-size: 1.4rem;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }
+
+        .img-display {
+            width: 100%;
+            height: 280px;
+            background: #f9f9f9;
+            border-radius: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 1px solid #eee;
+        }
+
+        #figura-img {
+            max-width: 95%;
+            max-height: 95%;
+            opacity: 0;
+            transition: 0.5s ease;
+            border-radius: 10px;
+        }
+
+        #figura-img.visible { opacity: 1; }
+
+        .btn-revelar {
+            width: 100%;
+            padding: 15px;
+            background: var(--verde);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-weight: 900;
+            margin-bottom: 10px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .btn-album {
+            width: 100%;
+            padding: 16px;
+            background: var(--gris-boton);
+            color: var(--texto-boton);
+            border: none;
+            border-radius: 15px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 100;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .grid-album {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .slot {
+            aspect-ratio: 1/1;
+            background: #1a1a1a;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #333;
+            color: #555;
+            font-size: 0.65rem;
+            font-weight: 800;
+            overflow: hidden;
+        }
+
+        .slot img { width: 100%; height: 100%; object-fit: cover; }
+
+        #viewer {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.98);
+            z-index: 200;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .viewer-card {
+            width: 85%;
+            max-width: 320px;
+            border-radius: 20px;
+            padding: 8px;
+            background: white;
+        }
+
+        .frame-dorado { border: 6px solid var(--dorado); box-shadow: 0 0 30px var(--dorado); animation: brillo-oro 2s infinite; }
+        .frame-celeste { border: 6px solid var(--celeste); box-shadow: 0 0 25px var(--celeste); }
+
+        @keyframes brillo-oro { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.2); } }
+
+        .btn-cerrar { margin-top: 30px; background: white; padding: 10px 30px; border-radius: 50px; font-weight: 900; cursor: pointer; }
+
+        .input-box { background: #f0f0f0; border-radius: 12px; margin-bottom: 10px; }
+        input { width: 100%; padding: 12px; border: none; background: transparent; text-align: center; font-weight: 800; outline: none; text-transform: uppercase; }
+        
+        /* ESTILO PARA EL ERROR */
+        .msg-error {
+            color: var(--rojo);
+            font-weight: 800;
+            font-size: 0.75rem;
+            margin-bottom: 10px;
+            display: none;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="sonido-silbato">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2381/2381-preview.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="card">
+        <img src="https://i.postimg.cc/05ZQq6ZH/1775411376250.png" class="logo-principal">
+        <h1 class="titulo">FC SAN BERNARDO</h1>
+        
+        <div class="img-display">
+            <img src="" id="figura-img">
+            <p id="placeholder-text" style="color:#ddd; font-weight:800;">INGRESA TU CÓDIGO</p>
+        </div>
+
+        <div id="error-text" class="msg-error">CÓDIGO INCORRECTO</div>
+
+        <div class="input-box">
+            <input type="text" id="codigo" placeholder="CÓDIGO AQUÍ">
+        </div>
+        
+        <button class="btn-revelar" onclick="revelar()">Revelar Cromo</button>
+        <button class="btn-album" onclick="abrirAlbum()">
+            <i class="fas fa-th"></i> VER MI COLECCIÓN
+        </button>
+    </div>
+
+    <div id="modal-album" class="modal">
+        <h2 style="color: white; text-align: center; font-family: Montserrat;">COLECCIÓN</h2>
+        <div class="grid-album" id="album-container"></div>
+        <center><div class="btn-cerrar" onclick="cerrarAlbum()">CERRAR</div></center>
+    </div>
+
+    <div id="viewer" onclick="cerrarViewer()">
+        <div class="viewer-card" id="viewer-frame">
+            <img src="" id="viewer-img" style="width:100%; border-radius:12px; display:block;">
+        </div>
+        <div class="btn-cerrar">CERRAR</div>
+    </div>
+
+    <script>
+        const figuras = {
+            'D1': 'https://i.postimg.cc/XvyTwfW6/1775535345650.png',
+            'D2': 'URL', 'D3': 'URL', 'D4': 'URL',
+            'A1': 'https://i.postimg.cc/mDz8HT2S/IMG-20260407-WA0166.jpg',
+            'A2': 'https://i.postimg.cc/wjHqnrvw/file_00000000a76c71f59de4318a67e351be.png',
+            'A3': 'https://i.postimg.cc/NFWSHMFv/IMG-20260406-WA0072.jpg',
+            'A4': 'https://i.postimg.cc/zGhz0g2B/1775611029071.png',
+            'B2': 'https://i.postimg.cc/jCVqkKqC/file-000000006b5861f7847aa85d01e68477.png'
+            // Completar hasta A15 y B5
+        };
+
+        let coleccion = JSON.parse(localStorage.getItem('fcsb_coleccion')) || [];
+
+        function revelar() {
+            const cod = document.getElementById('codigo').value.trim().toUpperCase();
+            const img = document.getElementById('figura-img');
+            const placeholder = document.getElementById('placeholder-text');
+            const errorElement = document.getElementById('error-text');
+
+            if (figuras[cod]) {
+                errorElement.style.display = 'none';
+                img.src = figuras[cod];
+                img.classList.add('visible');
+                placeholder.style.display = 'none';
+                
+                if (!coleccion.includes(cod)) {
+                    coleccion.push(cod);
+                    localStorage.setItem('fcsb_coleccion', JSON.stringify(coleccion));
+                }
+                document.getElementById('sonido-silbato').play();
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: cod.startsWith('D') ? ['#d4af37','#fff'] : ['#00d4ff','#fff'] });
+            } else {
+                // LÓGICA DE ERROR
+                errorElement.style.display = 'block';
+                img.classList.remove('visible');
+                placeholder.style.display = 'block';
+            }
+        }
+
+        function abrirAlbum() {
+            const container = document.getElementById('album-container');
+            container.innerHTML = '';
+            const ids = ['D1','D2','D3','D4', ...Array.from({length: 15}, (_, i) => `A${i+1}`), ...Array.from({length: 5}, (_, i) => `B${i+1}`)];
+            ids.forEach(id => {
+                const slot = document.createElement('div');
+                slot.className = 'slot';
+                if (coleccion.includes(id)) {
+                    slot.innerHTML = `<img src="${figuras[id]}" onclick="event.stopPropagation(); verGrande('${figuras[id]}', '${id}')">`;
+                    slot.style.border = id.startsWith('D') ? "2px solid #d4af37" : "1px solid #00d4ff";
+                } else {
+                    slot.innerHTML = `<i class="fas fa-lock"></i><span>${id}</span>`;
+                }
+                container.appendChild(slot);
+            });
+            document.getElementById('modal-album').style.display = 'block';
+        }
+
+        function verGrande(url, id) {
+            const vImg = document.getElementById('viewer-img');
+            const vFrame = document.getElementById('viewer-frame');
+            vImg.src = url;
+            vFrame.className = 'viewer-card ' + (id.startsWith('D') ? 'frame-dorado' : 'frame-celeste');
+            document.getElementById('viewer').style.display = 'flex';
+        }
+
+        function cerrarViewer() { document.getElementById('viewer').style.display = 'none'; }
+        function cerrarAlbum() { document.getElementById('modal-album').style.display = 'none'; }
+    </script>
+</body>
+</html>
+
