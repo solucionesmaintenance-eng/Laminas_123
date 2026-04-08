@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FC San Bernardo - Colección Oficial</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Arial Black', Gadget, sans-serif;
+            background: radial-gradient(circle, #0d1b2a 0%, #000000 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+            color: white;
+            box-sizing: border-box;
+            transition: background 1.5s ease;
+        }
+
+        body.gold-mode {
+            background: radial-gradient(circle, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
+        }
+
+        .container {
+            background: rgba(13, 27, 42, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 25px;
+            box-shadow: 0 0 50px rgba(0, 119, 182, 0.5);
+            text-align: center;
+            border: 2px solid #0077b6;
+            width: 100%;
+            max-width: 450px;
+            transition: all 1s ease;
+            position: relative;
+        }
+
+        h1 { margin: 10px 0 25px 0; font-size: clamp(1.5rem, 5vw, 2.2rem); text-shadow: 2px 2px #000; }
+
+        input {
+            width: 85%;
+            padding: 15px;
+            border-radius: 50px;
+            border: 2px solid #00b4d8;
+            background: #1b263b;
+            color: white;
+            font-size: 1.1rem;
+            text-align: center;
+            margin-bottom: 10px;
+            outline: none;
+        }
+
+        /* Estilo para el Mensaje de Error Estético */
+        #mensajeError {
+            color: #ff4d4d;
+            font-size: 0.85rem;
+            height: 20px;
+            margin-bottom: 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-family: sans-serif;
+            font-weight: bold;
+        }
+
+        button {
+            background: linear-gradient(45deg, #0077b6, #00b4d8);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: 0.3s;
+        }
+
+        #contenedorCromo {
+            margin-top: 30px;
+            display: none;
+            animation: bounceIn 0.8s ease forwards;
+        }
+
+        .cromo-img {
+            width: 100%;
+            border-radius: 15px;
+            border: 6px solid #fff;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.8);
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+<audio id="audioGol" src="https://www.soundjay.com/misc/sounds/stadium-cheer-01.mp3"></audio>
+
+<div class="container">
+    <div style="color: #00b4d8; font-size: 0.8rem; letter-spacing: 2px;">FC SAN BERNARDO</div>
+    <h1>COLECCIÓN 2026</h1>
+    
+    <input type="text" id="codigoInput" placeholder="INGRESA EL CÓDIGO">
+    <div id="mensajeError">Código incorrecto, intenta de nuevo</div>
+    
+    <button onclick="visualizarCromo()">REVELAR JUGADOR</button>
+
+    <div id="contenedorCromo">
+        <img src="" id="imagenCromo" class="cromo-img">
+        <div id="nombreJugador" style="background:#fff; color:#0d1b2a; padding:8px; margin-top:-15px; position:relative; font-weight:bold; border-radius:8px; display:inline-block;"></div>
+    </div>
+</div>
+
+<script>
+    function mostrarError(mensaje) {
+        const errorDiv = document.getElementById('mensajeError');
+        errorDiv.innerText = mensaje;
+        errorDiv.style.opacity = '1';
+        setTimeout(() => { errorDiv.style.opacity = '0'; }, 3000);
+    }
+
+    function visualizarCromo() {
+        const codigoInput = document.getElementById('codigoInput').value.trim().toUpperCase();
+        const contenedor = document.getElementById('contenedorCromo');
+        const imagen = document.getElementById('imagenCromo');
+        const nombre = document.getElementById('nombreJugador');
+        const cuerpo = document.body;
+
+        if (codigoInput === "") {
+            mostrarError("Debes ingresar un código");
+            return;
+        }
+
+        let datos = new FormData();
+        datos.append('codigo', codigoInput);
+
+        fetch('buscar.php', { method: 'POST', body: datos })
+        .then(response => response.json())
+        .then(data => {
+            if (data) {
+                imagen.src = data.imagen_url;
+                nombre.innerText = data.nombre;
+                contenedor.style.display = "block";
+
+                if (codigoInput === 'D1') {
+                    // Efecto Dorado + Serpentinas + Audio
+                    cuerpo.classList.add('gold-mode');
+                    document.getElementById('audioGol').play();
+                    
+                    var duration = 3 * 1000;
+                    var animationEnd = Date.now() + duration;
+                    var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+                    var interval = setInterval(function() {
+                        var timeLeft = animationEnd - Date.now();
+                        if (timeLeft <= 0) return clearInterval(interval);
+                        var particleCount = 50 * (timeLeft / duration);
+                        confetti(Object.assign({}, defaults, { particleCount, origin: { x: Math.random(), y: Math.random() - 0.2 }, colors: ['#ffd700', '#ffffff'] }));
+                    }, 250);
+
+                    setTimeout(() => { cuerpo.classList.remove('gold-mode'); }, 4000);
+                } else {
+                    confetti({ particleCount: 150, spread: 70, colors: ['#0077b6', '#ffffff'] });
+                }
+            } else {
+                mostrarError("Ese código no existe en el club");
+                contenedor.style.display = "none";
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            mostrarError("Error de conexión con el servidor");
+        });
+    }
+</script>
+
+</body>
+</html>
