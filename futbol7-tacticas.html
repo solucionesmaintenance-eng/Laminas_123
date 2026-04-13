@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0d0d0d">
+<title>Coach Board · Fútbol 7</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;600;700&family=Oswald:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --verde: #1a6b2e;
+  --vc: #3aaa58;
+  --oro: #f5c518;
+  --rojo: #e63946;
+  --azul: #0099ff;
+  --bg: #0d0d0d;
+  --card: #161616;
+  --card2: #1c1c1c;
+  --borde: #2a2a2a;
+  --txt: #f0f0f0;
+  --gris: #888;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html { font-size:16px; -webkit-text-size-adjust:100%; }
+body {
+  background:var(--bg);
+  color:var(--txt);
+  font-family:'Rajdhani',sans-serif;
+  min-height:100vh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* HEADER */
+header {
+  background:#0a0a0a;
+  border-bottom:2px solid var(--vc);
+  padding:10px 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky;
+  top:0;
+  z-index:200;
+}
+.logo { font-family:'Bebas Neue',sans-serif; font-size:1.6rem; letter-spacing:3px; color:var(--vc); line-height:1; }
+.logo span { color:var(--oro); }
+.logo small { display:block; font-size:0.55rem; letter-spacing:4px; color:var(--gris); margin-top:1px; }
+.hbadge { background:var(--vc); color:#000; font-family:'Bebas Neue',sans-serif; font-size:0.7rem; letter-spacing:2px; padding:4px 9px; border-radius:3px; }
+
+/* TABS */
+.tabs {
+  display:flex;
+  overflow-x:auto;
+  scrollbar-width:none;
+  background:#111;
+  border-bottom:2px solid var(--borde);
+  position:sticky;
+  top:54px;
+  z-index:150;
+}
+.tabs::-webkit-scrollbar { display:none; }
+.tab {
+  flex:1;
+  min-width:75px;
+  background:transparent;
+  border:none;
+  border-bottom:3px solid transparent;
+  color:var(--gris);
+  font-family:'Oswald',sans-serif;
+  font-size:0.68rem;
+  letter-spacing:1px;
+  padding:11px 6px 9px;
+  cursor:pointer;
+  white-space:nowrap;
+  text-transform:uppercase;
+  transition:all 0.2s;
+}
+.tab.active { color:var(--vc); border-bottom-color:var(--vc); background:rgba(58,170,88,0.06); }
+
+/* PANELS */
+.panel { display:none; padding:0 0 80px; }
+.panel.active { display:block; }
+
+/* ── CAMPO LAYOUT ── */
+.campo-layout { display:flex; flex-direction:column; }
+@media(min-width:580px){
+  .campo-layout { flex-direction:row; align-items:flex-start; gap:16px; padding:16px; }
+  .campo-svg-wrap { flex:0 0 290px; padding:0; }
+  .campo-info { flex:1; padding-top:0; }
+}
+.campo-svg-wrap { padding:12px 14px 0; display:flex; justify-content:center; }
+svg#campo { width:100%; max-width:320px; height:auto; display:block; filter:drop-shadow(0 6px 20px rgba(0,0,0,0.7)); touch-action:manipulation; }
+
+/* jugadores SVG */
+.jug { cursor:pointer; }
+.jug circle { transition:stroke-width 0.15s; }
+.jug.sel circle { stroke:var(--oro) !important; stroke-width:3.5 !important; }
+
+/* FICHA JUGADOR */
+.campo-info { padding:12px 14px; }
+.hint { text-align:center; padding:24px 14px; border:1px dashed var(--borde); border-radius:8px; color:var(--gris); font-size:0.88rem; line-height:1.6; }
+.hint .ico { font-size:1.8rem; display:block; margin-bottom:6px; }
+
+.pcard { display:none; background:var(--card); border:1px solid var(--borde); border-left:4px solid var(--vc); border-radius:8px; padding:14px; animation:fsl 0.25s ease; }
+.pcard.vis { display:block; }
+@keyframes fsl { from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:translateY(0);} }
+
+.pnum { font-family:'Bebas Neue',sans-serif; font-size:2.6rem; color:var(--oro); line-height:1; }
+.pname { font-family:'Oswald',sans-serif; font-size:1.15rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:5px; }
+.prole { display:inline-block; background:var(--verde); color:#fff; font-size:0.65rem; letter-spacing:1.5px; padding:3px 9px; border-radius:3px; margin-bottom:11px; font-family:'Oswald',sans-serif; text-transform:uppercase; }
+.pdesc { font-size:0.86rem; color:#bbb; line-height:1.65; margin-bottom:11px; }
+.srow { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; }
+.sitem { background:#111; border-radius:4px; padding:7px 5px; text-align:center; }
+.slabel { font-size:0.56rem; letter-spacing:1px; color:var(--gris); text-transform:uppercase; }
+.sbar-w { background:#2a2a2a; border-radius:2px; height:3px; margin:5px 0 3px; overflow:hidden; }
+.sbar { height:100%; border-radius:2px; background:var(--vc); }
+.sval { font-family:'Bebas Neue',sans-serif; font-size:0.92rem; color:var(--oro); }
+
+/* SUPLENTES */
+.sdiv { font-family:'Oswald',sans-serif; font-size:0.72rem; letter-spacing:2px; text-transform:uppercase; color:#555; padding:10px 14px 4px; border-top:1px solid var(--borde); margin-top:4px; }
+.suplentes-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:7px; padding:8px 14px 12px; }
+.sup-chip { background:var(--card2); border:1px solid var(--borde); border-radius:6px; padding:8px 4px; text-align:center; cursor:pointer; transition:border-color 0.2s; }
+.sup-chip.sel { border-color:var(--oro); }
+.sup-chip .snum { font-family:'Bebas Neue',sans-serif; font-size:1.25rem; color:var(--gris); line-height:1; }
+.sup-chip.sel .snum { color:var(--oro); }
+.sup-chip .snombre { font-size:0.58rem; color:#666; margin-top:2px; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:0 2px; }
+
+.leyenda { display:flex; flex-wrap:wrap; gap:8px 14px; padding:10px 14px; border-top:1px solid var(--borde); }
+.ley-item { display:flex; align-items:center; gap:5px; font-size:0.7rem; color:#aaa; }
+.ley-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+
+/* SECCIONES */
+.sec { padding:18px 14px; border-bottom:1px solid var(--borde); }
+.sec:last-child { border-bottom:none; }
+.sec-h { font-family:'Bebas Neue',sans-serif; font-size:1.25rem; letter-spacing:3px; color:var(--vc); margin-bottom:13px; display:flex; align-items:center; gap:9px; }
+.sec-h::after { content:''; flex:1; height:1px; background:linear-gradient(to right,var(--vc),transparent); }
+.ibadge { width:30px; height:30px; background:var(--verde); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.95rem; flex-shrink:0; }
+
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+.g3 { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; }
+@media(max-width:360px) { .g2{grid-template-columns:1fr;} .g3{grid-template-columns:1fr 1fr;} }
+
+.tcard { background:var(--card); border:1px solid var(--borde); border-radius:7px; padding:13px; }
+.tcard-h { font-family:'Oswald',sans-serif; font-weight:700; font-size:0.78rem; letter-spacing:1.5px; text-transform:uppercase; color:var(--oro); margin-bottom:7px; display:flex; align-items:center; gap:7px; }
+.dot { width:6px; height:6px; border-radius:50%; background:var(--vc); flex-shrink:0; }
+.dot.r{background:var(--rojo);} .dot.o{background:var(--oro);} .dot.a{background:var(--azul);}
+.tcard p, .tcard ul { font-size:0.83rem; color:#bbb; line-height:1.65; }
+.tcard ul { padding-left:14px; }
+.tcard ul li { margin-bottom:2px; }
+
+.alerta { background:rgba(230,57,70,0.1); border:1px solid var(--rojo); border-left:4px solid var(--rojo); border-radius:5px; padding:11px 13px; font-size:0.83rem; color:#f4a0a5; margin-bottom:11px; line-height:1.6; }
+.alerta strong { color:var(--rojo); font-family:'Oswald',sans-serif; }
+.alerta.oro { background:rgba(245,197,24,0.08); border-color:var(--oro); border-left-color:var(--oro); color:#f5d97a; }
+.alerta.oro strong { color:var(--oro); }
+
+/* FLUJO */
+.flow { display:flex; overflow-x:auto; gap:0; border-radius:6px; overflow:hidden; margin-bottom:11px; scrollbar-width:none; }
+.flow::-webkit-scrollbar{display:none;}
+.fstep { flex:1; min-width:82px; background:#111; border:1px solid var(--borde); padding:11px 7px; text-align:center; position:relative; }
+.fstep:not(:last-child)::after { content:'›'; position:absolute; right:-8px; top:50%; transform:translateY(-50%); color:var(--vc); font-size:1.2rem; z-index:1; }
+.fnum { font-family:'Bebas Neue',sans-serif; font-size:1.5rem; color:var(--vc); line-height:1; }
+.flabel { font-size:0.58rem; letter-spacing:1px; color:var(--gris); text-transform:uppercase; }
+.fdesc { font-size:0.75rem; color:#ccc; margin-top:3px; }
+
+/* BTN */
+.btn-g { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; }
+.btn { background:var(--card); border:1px solid var(--borde); color:var(--gris); font-family:'Oswald',sans-serif; font-size:0.7rem; letter-spacing:1px; padding:9px 12px; cursor:pointer; border-radius:4px; text-transform:uppercase; transition:all 0.2s; }
+.btn.active,.btn:active { background:var(--verde); border-color:var(--vc); color:#fff; }
+
+/* CONTRAGOLPE VISUAL */
+.cgfield { background:#2d8a45; border-radius:8px; padding:14px 11px; margin-bottom:11px; display:flex; flex-direction:column; gap:11px; position:relative; overflow:hidden; }
+.cgfield::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(90deg,transparent 0,transparent 28px,rgba(0,0,0,0.07) 28px,rgba(0,0,0,0.07) 29px); }
+.frow { display:flex; align-items:center; gap:5px; flex-wrap:wrap; position:relative; z-index:1; }
+.ftag { background:rgba(0,0,0,0.65); color:var(--oro); font-family:'Bebas Neue',sans-serif; font-size:0.65rem; letter-spacing:2px; padding:3px 7px; border-radius:2px; white-space:nowrap; }
+.chip { background:rgba(0,0,0,0.65); border:1px solid rgba(255,255,255,0.25); color:#fff; font-size:0.72rem; padding:3px 8px; border-radius:10px; font-weight:600; white-space:nowrap; }
+.chip.k { border-color:var(--oro); color:var(--oro); }
+.arr { color:rgba(255,255,255,0.5); font-size:0.95rem; }
+.fdesc2 { font-size:0.7rem; color:rgba(255,255,255,0.55); }
+
+/* TABLA */
+.tbl-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:6px; }
+table { width:100%; border-collapse:collapse; font-size:0.76rem; min-width:380px; }
+thead tr { background:#1a1a1a; border-bottom:2px solid var(--vc); }
+th { padding:9px 8px; text-align:left; font-family:'Oswald',sans-serif; letter-spacing:1px; color:var(--vc); font-size:0.67rem; }
+td { padding:8px 8px; border-bottom:1px solid #1e1e1e; color:#ccc; vertical-align:top; }
+tr:nth-child(even) td { background:rgba(255,255,255,0.02); }
+.tbl-hint { text-align:center; font-size:0.68rem; color:var(--gris); padding:5px 0 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">COACH <span>BOARD</span><small>FÚTBOL 7</small></div>
+  <div class="hbadge">⚽ TÁCTICAS PRO</div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('campo',this)">🗺 Campo</button>
+  <button class="tab" onclick="showTab('estrategia',this)">🧠 Estrategia</button>
+  <button class="tab" onclick="showTab('tactica',this)">⚙️ Táctica</button>
+  <button class="tab" onclick="showTab('contragolpe',this)">⚡ Contra</button>
+</div>
+
+<!-- ══ CAMPO ══ -->
+<div class="panel active" id="tab-campo">
+  <div class="campo-layout">
+
+    <div class="campo-svg-wrap">
+      <svg id="campo" viewBox="0 0 300 490" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1a7030"/>
+            <stop offset="50%" stop-color="#2b9044"/>
+            <stop offset="100%" stop-color="#1a7030"/>
+          </linearGradient>
+          <pattern id="st" width="30" height="1" patternUnits="userSpaceOnUse">
+            <rect width="30" height="1" fill="#268040"/>
+            <rect width="15" height="1" fill="#1f6e38"/>
+          </pattern>
+          <marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" fill="rgba(255,255,255,0.4)"/>
+          </marker>
+        </defs>
+        <rect width="300" height="490" fill="url(#st)"/>
+        <rect width="300" height="490" fill="url(#g1)" opacity="0.65"/>
+        <rect x="10" y="10" width="280" height="470" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="2"/>
+        <line x1="10" y1="245" x2="290" y2="245" stroke="rgba(255,255,255,0.45)" stroke-width="1.5"/>
+        <circle cx="150" cy="245" r="34" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+        <circle cx="150" cy="245" r="2" fill="rgba(255,255,255,0.6)"/>
+        <rect x="75" y="398" width="150" height="72" fill="none" stroke="rgba(255,255,255,0.45)" stroke-width="1.5"/>
+        <rect x="112" y="468" width="76" height="14" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="2"/>
+        <circle cx="150" cy="418" r="2" fill="rgba(255,255,255,0.6)"/>
+        <rect x="75" y="20" width="150" height="72" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.5"/>
+        <rect x="112" y="8" width="76" height="14" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+        <circle cx="150" cy="72" r="2" fill="rgba(255,255,255,0.4)"/>
+        <line x1="44" y1="223" x2="44" y2="140" stroke="rgba(180,180,255,0.3)" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arr)"/>
+        <line x1="256" y1="223" x2="256" y2="140" stroke="rgba(180,180,255,0.3)" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arr)"/>
+        <line x1="150" y1="282" x2="150" y2="142" stroke="rgba(245,197,24,0.22)" stroke-width="1.5" stroke-dasharray="4,4" marker-end="url(#arr)"/>
+        <text x="150" y="238" text-anchor="middle" fill="rgba(255,255,255,0.18)" font-family="Bebas Neue,sans-serif" font-size="10" letter-spacing="3">1 · 2 · 1 · 2</text>
+
+        <!-- #1 FRAYBAN -->
+        <g class="jug" id="jug1" onclick="selJug(1)">
+          <circle cx="150" cy="452" r="20" fill="#b71c1c" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>
+          <text x="150" y="457" text-anchor="middle" fill="#fff" font-family="Bebas Neue,sans-serif" font-size="14">1</text>
+          <text x="150" y="478" text-anchor="middle" fill="rgba(255,255,255,0.78)" font-family="Rajdhani,sans-serif" font-size="8.5" font-weight="700">Frayban</text>
+        </g>
+        <!-- #2 YAMAMOTO -->
+        <g class="jug" id="jug2" onclick="selJug(2)">
+          <circle cx="208" cy="368" r="20" fill="#1565C0" stroke="rgba(255,255,255,0.35)" stroke-width="2"/>
+          <text x="208" y="373" text-anchor="middle" fill="#fff" font-family="Bebas Neue,sans-serif" font-size="14">2</text>
+          <text x="208" y="394" text-anchor="middle" fill="rgba(255,255,255,0.78)" font-family="Rajdhani,sans-serif" font-size="8">Yamamoto</text>
+        </g>
+        <!-- #3 JHAIR -->
+        <g class="jug" id="jug3" onclick="selJug(3)">
+          <circle cx="92" cy="368" r="20" fill="#1565C0" stroke="rgba(255,255,255,0.35)" stroke-width="2"/>
+          <text x="92" y="373" text-anchor="middle" fill="#fff" font-family="Bebas Neue,sans-serif" font-size="14">3</text>
+          <text x="92" y="394" text-anchor="middle" fill="rgba(255,255,255,0.78)" font-family="Rajdhani,sans-serif" font-size="8">Jhair</text>
+        </g>
+        <!-- #5 JEISON -->
+        <g class="jug" id="jug5" onclick="selJug(5)">
+          <circle cx="150" cy="302" r="22" fill="#0d7a3e" stroke="#f5c518" stroke-width="2.5"/>
+          <text x="150" y="307" text-anchor="middle" fill="#fff" font-family="Bebas Neue,sans-serif" font-size="15">5</text>
+          <text x="150" y="330" text-anchor="middle" fill="rgba(255,215,0,0.88)" font-family="Rajdhani,sans-serif" font-size="8.5" font-weight="700">Jeison</text>
+        </g>
+        <!-- #7 CARLIER -->
+        <g class="jug" id="jug7" onclick="selJug(7)">
+          <circle cx="44" cy="245" r="20" fill="#6a1b9a" stroke="rgba(255,255,255,0.35)" stroke-width="2"/>
+          <text x="44" y="250" text-anchor="middle" fill="#fff" font-family="Bebas Neue,sans-serif" font-size="14">7</text>
+          <text x="44" y="271" text-anchor="middle" fill="rgba(255,255,255,0.78)" font-family="Rajdhani,sans-serif" font-size="8">Carlier</text>
+        </g>
+        <!-- #4 JUNIOR -->
+        <g class="jug" id="jug4" onclick="selJug(4)">
+          <circle cx="256" cy="245" r="20" fill="#6a1b9a" stroke="rgba(255,255,255,0.35)" stroke-width="2"/>
+          <text x="256" y="250" text-anchor="middle" fill="#fff" font-family="Bebas Neue,sans-serif" font-size="14">4</text>
+          <text x="256" y="271" text-anchor="middle" fill="rgba(255,255,255,0.78)" font-family="Rajdhani,sans-serif" font-size="8">Junior</text>
+        </g>
+        <!-- #10 PLIN -->
+        <g class="jug" id="jug10" onclick="selJug(10)">
+          <circle cx="150" cy="118" r="22" fill="#e65100" stroke="#f5c518" stroke-width="2.5"/>
+          <text x="150" y="123" text-anchor="middle" fill="#fff" font-family="Bebas Neue,sans-serif" font-size="14">10</text>
+          <text x="150" y="146" text-anchor="middle" fill="rgba(255,215,0,0.88)" font-family="Rajdhani,sans-serif" font-size="8.5" font-weight="700">Plin</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="campo-info">
+      <div class="hint" id="hint"><span class="ico">👆</span>Toca un jugador en el campo para ver su ficha táctica</div>
+
+      <div class="pcard" id="card1">
+        <div class="pnum">1</div><div class="pname">Frayban</div>
+        <div class="prole">🧤 Portero</div>
+        <div class="pdesc">Última línea y primer eslabón del ataque. Distribución rápida activa el contragolpe. Organiza la defensa con voz constante y sale a cortar centros con decisión.</div>
+        <div class="srow">
+          <div class="sitem"><div class="slabel">Posición</div><div class="sbar-w"><div class="sbar" style="width:94%"></div></div><div class="sval">94</div></div>
+          <div class="sitem"><div class="slabel">Reflejos</div><div class="sbar-w"><div class="sbar" style="width:82%"></div></div><div class="sval">82</div></div>
+          <div class="sitem"><div class="slabel">Salida</div><div class="sbar-w"><div class="sbar" style="width:86%"></div></div><div class="sval">86</div></div>
+        </div>
+      </div>
+
+      <div class="pcard" id="card2">
+        <div class="pnum">2</div><div class="pname">Yamamoto</div>
+        <div class="prole">🛡 Central Derecho · Eje Defensivo</div>
+        <div class="pdesc">Eje del bloque defensivo junto a Jhair y Jeison. Cubre el carril derecho cuando Junior (#4) sube. Primer pase al pivote #5 para activar la salida limpia.</div>
+        <div class="srow">
+          <div class="sitem"><div class="slabel">Defensa</div><div class="sbar-w"><div class="sbar" style="width:84%"></div></div><div class="sval">84</div></div>
+          <div class="sitem"><div class="slabel">Pase</div><div class="sbar-w"><div class="sbar" style="width:78%"></div></div><div class="sval">78</div></div>
+          <div class="sitem"><div class="slabel">Posición</div><div class="sbar-w"><div class="sbar" style="width:82%"></div></div><div class="sval">82</div></div>
+        </div>
+      </div>
+
+      <div class="pcard" id="card3">
+        <div class="pnum">3</div><div class="pname">Jhair</div>
+        <div class="prole">🛡 Central Izquierdo · Eje Defensivo</div>
+        <div class="pdesc">Espejo de Yamamoto en carril izquierdo. Cuando Carlier (#7) sube, Jhair cubre el espacio. Nunca abandona su zona. En salida habilita al #5 o busca al #7 disponible.</div>
+        <div class="srow">
+          <div class="sitem"><div class="slabel">Defensa</div><div class="sbar-w"><div class="sbar" style="width:85%"></div></div><div class="sval">85</div></div>
+          <div class="sitem"><div class="slabel">Pase</div><div class="sbar-w"><div class="sbar" style="width:76%"></div></div><div class="sval">76</div></div>
+          <div class="sitem"><div class="slabel">Posición</div><div class="sbar-w"><div class="sbar" style="width:81%"></div></div><div class="sval">81</div></div>
+        </div>
+      </div>
+
+      <div class="pcard" id="card5">
+        <div class="pnum">5</div><div class="pname">Jeison</div>
+        <div class="prole">⭐ Pivote · Cerebro del Equipo</div>
+        <div class="pdesc">El más importante del sistema. Conecta defensa y ataque. Siempre debe tener mínimo 2 opciones de pase. En defensa baja a presionar; en ataque distribuye al #10, #4 y #7. Si Jeison falla, el equipo pierde el equilibrio.</div>
+        <div class="srow">
+          <div class="sitem"><div class="slabel">Pase</div><div class="sbar-w"><div class="sbar" style="width:92%"></div></div><div class="sval">92</div></div>
+          <div class="sitem"><div class="slabel">Visión</div><div class="sbar-w"><div class="sbar" style="width:90%"></div></div><div class="sval">90</div></div>
+          <div class="sitem"><div class="slabel">Defensa</div><div class="sbar-w"><div class="sbar" style="width:76%"></div></div><div class="sval">76</div></div>
+        </div>
+      </div>
+
+      <div class="pcard" id="card7">
+        <div class="pnum">7</div><div class="pname">Carlier</div>
+        <div class="prole">💪 Lateral-Extremo Izq · Pulmón</div>
+        <div class="pdesc">Jugador de ida y vuelta. Sube hasta la línea de fondo en ataque y baja hasta el área en defensa. Regla clave: nunca subir si Jhair (#3) no está cubierto. Genera superioridad en banda.</div>
+        <div class="srow">
+          <div class="sitem"><div class="slabel">Físico</div><div class="sbar-w"><div class="sbar" style="width:92%"></div></div><div class="sval">92</div></div>
+          <div class="sitem"><div class="slabel">Velocidad</div><div class="sbar-w"><div class="sbar" style="width:88%"></div></div><div class="sval">88</div></div>
+          <div class="sitem"><div class="slabel">Defensa</div><div class="sbar-w"><div class="sbar" style="width:77%"></div></div><div class="sval">77</div></div>
+        </div>
+      </div>
+
+      <div class="pcard" id="card4">
+        <div class="pnum">4</div><div class="pname">Junior</div>
+        <div class="prole">💪 Lateral-Extremo Der · Pulmón</div>
+        <div class="pdesc">Mismo rol que Carlier pero en banda derecha. Coordinación obligatoria: NUNCA los dos laterales arriba al mismo tiempo. Si Carlier ataca, Junior se mantiene. Esa coordinación evita la inferioridad numérica.</div>
+        <div class="srow">
+          <div class="sitem"><div class="slabel">Físico</div><div class="sbar-w"><div class="sbar" style="width:90%"></div></div><div class="sval">90</div></div>
+          <div class="sitem"><div class="slabel">Velocidad</div><div class="sbar-w"><div class="sbar" style="width:88%"></div></div><div class="sval">88</div></div>
+          <div class="sitem"><div class="slabel">Defensa</div><div class="sbar-w"><div class="sbar" style="width:80%"></div></div><div class="sval">80</div></div>
+        </div>
+      </div>
+
+      <div class="pcard" id="card10">
+        <div class="pnum">10</div><div class="pname">Plin</div>
+        <div class="prole">⚡ Delantero · Referencia Ofensiva</div>
+        <div class="pdesc">Punta de lanza del equipo. Poca defensa pero DEBE presionar al portero rival en pérdida para evitar salidas limpias. Moverse entre defensas, buscar espacios, recibir y definir. Su anticipación activa el contragolpe tipo B.</div>
+        <div class="srow">
+          <div class="sitem"><div class="slabel">Gol</div><div class="sbar-w"><div class="sbar" style="width:89%"></div></div><div class="sval">89</div></div>
+          <div class="sitem"><div class="slabel">Movim.</div><div class="sbar-w"><div class="sbar" style="width:86%"></div></div><div class="sval">86</div></div>
+          <div class="sitem"><div class="slabel">Defensa</div><div class="sbar-w"><div class="sbar" style="width:25%"></div></div><div class="sval">25</div></div>
+        </div>
+      </div>
+
+      <!-- SUPLENTES FICHAS -->
+      <div class="pcard" id="card9">
+        <div class="pnum">9</div><div class="pname">Gato</div>
+        <div class="prole">🔄 Suplente · Extremo/Lateral</div>
+        <div class="pdesc">Cubre el puesto de Carlier (#7) o Junior (#4). Desequilibrante en 1v1, ideal para entrar cuando el equipo necesita amplitud y frescura en las bandas.</div>
+        <div class="srow">
+          <div class="sitem"><div class="slabel">Velocidad</div><div class="sbar-w"><div class="sbar" style="width:88%"></div></div><div class="sval">88</div></div>
+          <div class="sitem"><div class="slabel">Regate</div><div class="sbar-w"><div class="sbar" style="width:84%"></div></div><div class="sval">84</div></div>
+          <div class="sitem"><div class="slabel">Físico</div><div class="sbar-w"><div class="sbar" style="width:80%"></div></div><div class="sval">80</div></div>
+        </div>
+      </div>
+
+      <div class="pcard" id="card8">
+        <div class="pnum">8</div><div class="pname">Chuky</div>
+        <div class="prole">🔄 Suplente · Mediocampo</div>
+        <div class="pdesc">Puede relevar a Jeison (#5) como pivote. Motor del equipo, cubre mucho campo y tiene capacidad de llegada al área. Su entrada da descanso al eje sin perder equilibrio táctico.</div>
+        <div class="srow">
+          <div class="sitem"><div class="slabel">Físico</div><div class="sbar-w"><div class="sbar" style="width:90%"></div></div><div class="sval">90</div></div>
+          <div class="sitem"><div class="slabel">Pase</div><div class="sbar-w"><div class="sbar" style="width:78%"></div></div><div class="sval">78</div></div>
+          <div class="sitem"><div class="slabel">Defensa</div><div class="sbar-w"><div class="sbar" style="width:75%"></div></div><div class="sval">75</div></div>
+        </div>
+      </div>
+
+      <div class="pcard" id="card11">
+        <div class="pnum">11</div><div class="pname">Carrascal</div>
+        <div class="prole">🔄 Suplente · Extremo Ofensivo</div>
+        <div class="pdesc">Variante de ataque. Puede jugar como segundo delantero junto a Plin o abrir en banda. Úsalo cuando el equipo necesite el gol — su presencia obliga a la defensa rival a reorganizarse.</div>
+        <div class="srow">
+          <div class="sitem"><div class="slabel">Ataque</div><div class="sbar-w"><div class="sbar" style="width:86%"></div></div><div class="sval">86</div></div>
+          <div class="sitem"><div class="slabel">Técnica</div><div class="sbar-w"><div class="sbar" style="width:82%"></div></div><div class="sval">82</div></div>
+          <div class="sitem"><div class="slabel">Defensa</div><div class="sbar-w"><div class="sbar" style="width:40%"></div></div><div class="sval">40</div></div>
+        </div>
+      </div>
+
+      <div class="pcard" id="card13">
+        <div class="pnum">13</div><div class="pname">Maikol</div>
+        <div class="prole">🔄 Suplente · Delantero</div>
+        <div class="pdesc">Suplente de Plin (#10). Mismo perfil ofensivo: referencia arriba, presión al portero, definición clara. Entrada ideal cuando Plin necesita descanso o se busca cambio de ritmo arriba.</div>
+        <div class="srow">
+          <div class="sitem"><div class="slabel">Gol</div><div class="sbar-w"><div class="sbar" style="width:84%"></div></div><div class="sval">84</div></div>
+          <div class="sitem"><div class="slabel">Movim.</div><div class="sbar-w"><div class="sbar" style="width:82%"></div></div><div class="sval">82</div></div>
+          <div class="sitem"><div class="slabel">Presión</div><div class="sbar-w"><div class="sbar" style="width:78%"></div></div><div class="sval">78</div></div>
+        </div>
+      </div>
+
+      <div class="pcard" id="card22">
+        <div class="pnum">22</div><div class="pname">Flaco</div>
+        <div class="prole">🔄 Suplente · Portero</div>
+        <div class="pdesc">Segundo portero. Suplente de Frayban. Mismo protocolo: salida rápida al #5, organización vocal de la defensa y distribución precisa para activar el contragolpe.</div>
+        <div class="srow">
+          <div class="sitem"><div class="slabel">Posición</div><div class="sbar-w"><div class="sbar" style="width:82%"></div></div><div class="sval">82</div></div>
+          <div class="sitem"><div class="slabel">Reflejos</div><div class="sbar-w"><div class="sbar" style="width:78%"></div></div><div class="sval">78</div></div>
+          <div class="sitem"><div class="slabel">Salida</div><div class="sbar-w"><div class="sbar" style="width:80%"></div></div><div class="sval">80</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sdiv">SUPLENTES — toca para ver ficha</div>
+  <div class="suplentes-grid">
+    <div class="sup-chip" id="sup9" onclick="selSup(9)"><div class="snum">9</div><div class="snombre">Gato</div></div>
+    <div class="sup-chip" id="sup8" onclick="selSup(8)"><div class="snum">8</div><div class="snombre">Chuky</div></div>
+    <div class="sup-chip" id="sup11" onclick="selSup(11)"><div class="snum">11</div><div class="snombre">Carrascal</div></div>
+    <div class="sup-chip" id="sup13" onclick="selSup(13)"><div class="snum">13</div><div class="snombre">Maikol</div></div>
+    <div class="sup-chip" id="sup22" onclick="selSup(22)"><div class="snum">22</div><div class="snombre">Flaco</div></div>
+  </div>
+
+  <div class="leyenda">
+    <div class="ley-item"><span class="ley-dot" style="background:#b71c1c"></span> Portero</div>
+    <div class="ley-item"><span class="ley-dot" style="background:#1565C0"></span> Eje defensivo</div>
+    <div class="ley-item"><span class="ley-dot" style="background:#0d7a3e;border:2px solid #f5c518"></span> Pivote</div>
+    <div class="ley-item"><span class="ley-dot" style="background:#6a1b9a"></span> Laterales</div>
+    <div class="ley-item"><span class="ley-dot" style="background:#e65100;border:2px solid #f5c518"></span> Delantero</div>
+  </div>
+</div>
+
+<!-- ══ ESTRATEGIA ══ -->
+<div class="panel" id="tab-estrategia">
+  <div class="sec">
+    <div class="sec-h"><div class="ibadge">🧠</div> Sistema 1–2–1–2</div>
+    <div class="g2">
+      <div class="tcard">
+        <div class="tcard-h"><div class="dot o"></div> Esquema</div>
+        <p>Frayban en portería, Yamamoto + Jhair como centrales, Jeison como pivote de equilibrio, Carlier + Junior como laterales con libertad, y Plin como referencia arriba. Sistema flexible y vertical.</p>
+      </div>
+      <div class="tcard">
+        <div class="tcard-h"><div class="dot"></div> Identidad</div>
+        <ul>
+          <li>Bloque bajo + contragolpe</li>
+          <li>Control del centro con Jeison</li>
+          <li>Amplitud con Carlier y Junior</li>
+          <li>Profundidad con Plin</li>
+          <li>Nunca 2 jugadores fuera de posición</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h"><div class="ibadge">⚔️</div> Fase Ofensiva</div>
+    <div class="flow">
+      <div class="fstep"><div class="fnum">1</div><div class="flabel">Salida</div><div class="fdesc">Frayban o centrales al #5</div></div>
+      <div class="fstep"><div class="fnum">2</div><div class="flabel">Pivote</div><div class="fdesc">Jeison: banda o vertical</div></div>
+      <div class="fstep"><div class="fnum">3</div><div class="flabel">Amplitud</div><div class="fdesc">Carlier o Junior abre</div></div>
+      <div class="fstep"><div class="fnum">4</div><div class="flabel">Gol</div><div class="fdesc">Plin recibe y define</div></div>
+    </div>
+    <div class="g2">
+      <div class="tcard">
+        <div class="tcard-h"><div class="dot a"></div> Opción A: Banda</div>
+        <p>Jeison activa a Carlier o Junior. El lateral sube 1v1, centra a Plin que entra al segundo palo. El lateral contrario llega para el rechace.</p>
+      </div>
+      <div class="tcard">
+        <div class="tcard-h"><div class="dot o"></div> Opción B: Vertical</div>
+        <p>Jeison busca directamente a Plin en profundidad. Plin aguanta y espera apoyo. Efectivo cuando la defensa rival está adelantada.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h"><div class="ibadge">🛡</div> Fase Defensiva</div>
+    <div class="alerta">
+      <strong>⚠️ REGLA DE ORO:</strong> Carlier y Junior NUNCA arriba al mismo tiempo. Si uno sube, el otro se mantiene. Violar esta regla = inferioridad numérica en ambas bandas.
+    </div>
+    <div class="g2">
+      <div class="tcard">
+        <div class="tcard-h"><div class="dot r"></div> Bloque de 3</div>
+        <ul>
+          <li>Yamamoto, Jhair y Jeison forman bloque</li>
+          <li>Jeison presiona al portador del balón</li>
+          <li>Yamamoto y Jhair cubren carriles</li>
+          <li>Lateral que bajó cubre el hueco del #5</li>
+          <li>Plin presiona al portero rival</li>
+        </ul>
+      </div>
+      <div class="tcard">
+        <div class="tcard-h"><div class="dot r"></div> Presión Alta</div>
+        <p>Plin orienta la presión a una banda. El lateral de ese lado sube a presionar. Jeison cubre el centro. Yamamoto y Jhair no avanzan. Objetivo: robo en zona alta → contragolpe.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TÁCTICA ══ -->
+<div class="panel" id="tab-tactica">
+  <div class="sec">
+    <div class="sec-h"><div class="ibadge">📌</div> Situaciones</div>
+    <div class="btn-g" id="btnSit">
+      <button class="btn active" onclick="showSit('gan',this)">✅ Ganando</button>
+      <button class="btn" onclick="showSit('per',this)">🔴 Perdiendo</button>
+      <button class="btn" onclick="showSit('emp',this)">🟡 Empate</button>
+      <button class="btn" onclick="showSit('inf',this)">⚠️ Inferioridad</button>
+    </div>
+    <div id="sit-gan">
+      <div class="tcard"><div class="tcard-h"><div class="dot"></div> Gestionar Ventaja</div>
+      <p>Jeison baja a formar línea de 3 con Yamamoto y Jhair. Carlier y Junior se repliegan al mediocampo. Plin presiona en campo rival para ganar tiempo. Circulación lenta sin arriesgar pases verticales.</p></div>
+    </div>
+    <div id="sit-per" style="display:none">
+      <div class="tcard"><div class="tcard-h"><div class="dot r"></div> Buscar el Gol</div>
+      <p>Carlier y Junior quedan más adelantados. Jeison se vuelve mediapunta de apoyo a Plin. Centrales perfectamente colocados. Mayor riesgo en salida — priorizar el pase vertical a Plin cuando haya espacio.</p></div>
+    </div>
+    <div id="sit-emp" style="display:none">
+      <div class="tcard"><div class="tcard-h"><div class="dot o"></div> Controlar y Atacar</div>
+      <p>Mantener estructura. Usar laterales en alternancia. Buscar el desmarque de Plin con pases profundos de Jeison. Si queda poco tiempo y se necesita el gol, activar protocolo "perdiendo".</p></div>
+    </div>
+    <div id="sit-inf" style="display:none">
+      <div class="alerta oro"><strong>⚡ INFERIORIDAD:</strong> Jeison baja a central. Laterales se repliegan. Solo Plin arriba. Bloque de 4 + esperar contragolpe largo al #10.</div>
+      <div class="tcard"><div class="tcard-h"><div class="dot r"></div> Protocolo 6 vs 7</div>
+      <p>Formación emergencia 1–3–1–1. Jeison = tercer central. Yamamoto y Jhair se abren. Carlier y Junior forman segunda línea. Solo Plin arriba esperando el balón largo.</p></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h"><div class="ibadge">🎯</div> Pelota Parada</div>
+    <div class="g2">
+      <div class="tcard">
+        <div class="tcard-h"><div class="dot o"></div> Libre Ofensivo</div>
+        <ul>
+          <li>Cerca: Plin o Jeison rematan, laterales entran</li>
+          <li>Banda: Carlier/Junior centra a Plin</li>
+          <li>Yamamoto y Jhair como cobertura</li>
+          <li>Opción pase corto a Jeison si la barrera está mal</li>
+        </ul>
+      </div>
+      <div class="tcard">
+        <div class="tcard-h"><div class="dot r"></div> Libre Defensivo</div>
+        <ul>
+          <li>Barrera: un lateral + Jeison</li>
+          <li>Plin presiona al lanzador</li>
+          <li>Yamamoto y Jhair cubren palos</li>
+          <li>Frayban organiza y manda</li>
+          <li>Al despejar → contragolpe inmediato</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h"><div class="ibadge">🔄</div> Cambios</div>
+    <div class="g2">
+      <div class="tcard">
+        <div class="tcard-h"><div class="dot a"></div> Cambios Tácticos</div>
+        <ul>
+          <li>Carlier cansado → entra <strong>Gato #9</strong></li>
+          <li>Junior cansado → entra <strong>Gato</strong> o <strong>Carrascal #11</strong></li>
+          <li>Jeison descansa → entra <strong>Chuky #8</strong></li>
+          <li>Plin descansa → entra <strong>Maikol #13</strong></li>
+          <li>Frayban lesionado → entra <strong>Flaco #22</strong></li>
+        </ul>
+      </div>
+      <div class="tcard">
+        <div class="tcard-h"><div class="dot o"></div> Cambio Ofensivo</div>
+        <p>Si el equipo necesita el gol, entra <strong>Carrascal #11</strong> como segunda punta junto a Plin. Sistema pasa a 1–2–1–1–1. Carlier y Junior siguen como laterales.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h"><div class="ibadge">📐</div> Principios</div>
+    <div class="g3">
+      <div class="tcard"><div class="tcard-h"><div class="dot"></div> Primer Toque</div><p>Siempre controlar orientado al siguiente pase. Jeison y los centrales nunca reciben con la espalda.</p></div>
+      <div class="tcard"><div class="tcard-h"><div class="dot a"></div> Ritmo</div><p>Pases rápidos al pivote, lentos en banda. El ritmo lo decide Jeison según la presión rival.</p></div>
+      <div class="tcard"><div class="tcard-h"><div class="dot o"></div> Voz</div><p>Laterales gritan "libre" o "cubierto". Centrales gritan "tiempo" o "presión". Frayban organiza desde atrás.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CONTRAGOLPE ══ -->
+<div class="panel" id="tab-contragolpe">
+  <div class="sec">
+    <div class="sec-h"><div class="ibadge">⚡</div> Sistema</div>
+    <div class="alerta oro">
+      <strong>⚡ ARMA PRINCIPAL:</strong> El contragolpe es la mayor fortaleza del equipo. Tres fases: recuperación → transición rápida → definición. Plin es la pieza clave — debe leer el momento exacto para arrancar.
+    </div>
+  </div>
+
+  <div class="sec" style="padding-top:8px">
+    <div style="font-family:'Oswald',sans-serif;font-size:0.82rem;letter-spacing:2px;color:#aaa;text-transform:uppercase;margin-bottom:11px;">Tipo A — Por Banda</div>
+    <div class="cgfield">
+      <div class="frow"><span class="ftag">FASE 1</span><span class="chip k">#5 Jeison</span><span class="arr">→</span><span class="chip">#2 Yamamoto o #3 Jhair</span><span class="fdesc2">roban el balón</span></div>
+      <div class="frow"><span class="ftag">FASE 2</span><span class="chip k">#5 Jeison</span><span class="arr">→</span><span class="chip k">#7 Carlier o #4 Junior</span><span class="fdesc2">pase al lateral en carrera</span></div>
+      <div class="frow"><span class="ftag">FASE 3</span><span class="chip k">#7 o #4</span><span class="arr">→</span><span class="chip k">#10 Plin</span><span class="fdesc2">centro / pase gol → definición</span></div>
+    </div>
+    <div class="tcard"><div class="tcard-h"><div class="dot a"></div> Clave del Tipo A</div><p>Carlier o Junior arrancan cuando Jeison recupera. Plin entra al segundo palo. <strong>Objetivo: 4–6 seg desde recuperación a remate.</strong></p></div>
+  </div>
+
+  <div class="sec">
+    <div style="font-family:'Oswald',sans-serif;font-size:0.82rem;letter-spacing:2px;color:#aaa;text-transform:uppercase;margin-bottom:11px;">Tipo B — Vertical Directo</div>
+    <div class="cgfield">
+      <div class="frow"><span class="ftag">FASE 1</span><span class="chip">#2 o #3</span><span class="arr">→</span><span class="chip">#1 Frayban</span><span class="fdesc2">despeje o saque</span></div>
+      <div class="frow"><span class="ftag">FASE 2</span><span class="chip k">#1 o #5</span><span class="arr">→</span><span class="chip k">#10 Plin</span><span class="fdesc2">pase largo al espacio</span></div>
+      <div class="frow"><span class="ftag">FASE 3</span><span class="chip k">Plin solo</span><span class="arr">→</span><span class="chip">vs Portero</span><span class="fdesc2">Carlier/Junior de apoyo</span></div>
+    </div>
+    <div class="tcard"><div class="tcard-h"><div class="dot o"></div> Clave del Tipo B</div><p>Funciona cuando la defensa rival está adelantada. La velocidad y anticipación de Plin son decisivas para este contragolpe.</p></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h"><div class="ibadge">🚨</div> Frenar el CG Rival</div>
+    <div class="alerta">
+      <strong>⚠️ VULNERABILIDAD:</strong> El espacio que dejan los laterales al subir es el punto más débil. La solución: coordinación entre Yamamoto, Jhair y el lateral que baja.
+    </div>
+    <div class="g2">
+      <div class="tcard">
+        <div class="tcard-h"><div class="dot r"></div> Protocolo Anti-CG</div>
+        <ul>
+          <li>Al perder: laterales frenan de inmediato</li>
+          <li>Jeison persigue al portador</li>
+          <li>Yamamoto y Jhair no abandonan línea</li>
+          <li>Plin orienta presión hacia una banda</li>
+          <li>Foul táctico de Jeison si el rival acelera</li>
+        </ul>
+      </div>
+      <div class="tcard">
+        <div class="tcard-h"><div class="dot r"></div> Tarea de Plin</div>
+        <p>Plin no corre hacia atrás — solo tapa al portero rival. <strong>Esa presión corta el contragolpe del rival antes de que empiece.</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h"><div class="ibadge">📊</div> Resumen</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>JUGADOR</th><th>ROL DEF.</th><th>ROL OFENSIVO</th><th>CONTRAGOLPE</th></tr>
+        </thead>
+        <tbody>
+          <tr><td style="color:#ef5350;font-weight:700">#1 Frayban</td><td>Última línea</td><td>Salida al #5</td><td>Lanzamiento largo a Plin</td></tr>
+          <tr><td style="color:#42a5f5;font-weight:700">#2 Yamamoto</td><td>Carril der.</td><td>1er pase al #5</td><td>No sube — cubre</td></tr>
+          <tr><td style="color:#42a5f5;font-weight:700">#3 Jhair</td><td>Carril izq.</td><td>1er pase al #5</td><td>No sube — cubre</td></tr>
+          <tr><td style="color:#f5c518;font-weight:700">#5 Jeison ⭐</td><td>Presiona, equilibra</td><td>Cerebro, distribuye</td><td style="color:var(--vc);font-weight:700">Activa lateral o Plin</td></tr>
+          <tr><td style="color:#ce93d8;font-weight:700">#7 Carlier</td><td>Baja a cubrir</td><td>Sube banda, centra</td><td style="color:var(--vc);font-weight:700">Sprint al espacio</td></tr>
+          <tr><td style="color:#ce93d8;font-weight:700">#4 Junior</td><td>Baja a cubrir</td><td>Sube banda, centra</td><td style="color:var(--vc);font-weight:700">Sprint al espacio</td></tr>
+          <tr><td style="color:#ff8a65;font-weight:700">#10 Plin ⚡</td><td>Presiona portero rival</td><td>Referencia, define</td><td style="color:var(--vc);font-weight:700">Receptor pase final</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="tbl-hint">← desliza para ver toda la tabla →</div>
+  </div>
+</div>
+
+<script>
+function showTab(id,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function selJug(num){
+  document.querySelectorAll('.pcard').forEach(c=>c.classList.remove('vis'));
+  document.querySelectorAll('.jug').forEach(g=>g.classList.remove('sel'));
+  document.querySelectorAll('.sup-chip').forEach(c=>c.classList.remove('sel'));
+  document.getElementById('hint').style.display='none';
+  const card=document.getElementById('card'+num);
+  if(card) card.classList.add('vis');
+  const jug=document.getElementById('jug'+num);
+  if(jug) jug.classList.add('sel');
+  setTimeout(()=>{
+    const info=document.querySelector('.campo-info');
+    if(info) info.scrollIntoView({behavior:'smooth',block:'nearest'});
+  },80);
+}
+function selSup(num){
+  document.querySelectorAll('.pcard').forEach(c=>c.classList.remove('vis'));
+  document.querySelectorAll('.jug').forEach(g=>g.classList.remove('sel'));
+  document.querySelectorAll('.sup-chip').forEach(c=>c.classList.remove('sel'));
+  document.getElementById('hint').style.display='none';
+  const card=document.getElementById('card'+num);
+  if(card) card.classList.add('vis');
+  const chip=document.getElementById('sup'+num);
+  if(chip) chip.classList.add('sel');
+  setTimeout(()=>{
+    const info=document.querySelector('.campo-info');
+    if(info) info.scrollIntoView({behavior:'smooth',block:'nearest'});
+  },80);
+}
+function showSit(id,btn){
+  ['gan','per','emp','inf'].forEach(s=>{
+    const el=document.getElementById('sit-'+s);
+    if(el) el.style.display='none';
+  });
+  document.getElementById('sit-'+id).style.display='block';
+  document.querySelectorAll('#btnSit .btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
