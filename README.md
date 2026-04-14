@@ -1,26 +1,37 @@
-# 🎟️ Cromos 3D Coleccionables
+# Formaciones FC SAN BERNARDO - Soluciones Maintenance Engineering
 
-## ✨ Sobre el proyecto
+Este repositorio contiene el material didáctico, láminas interactivas y recursos técnicos para los programas de formación desarrollados para **FC SAN BERNARDO**. El objetivo es proporcionar una plataforma de consulta rápida y aprendizaje visual sobre ingeniería de mantenimiento.
 
-**Cromos 3D Coleccionables** es una página web moderna y visualmente impactante donde puedes explorar, rotar y coleccionar **24 cromos 3D** en alta calidad.  
+## 🚀 Sobre el Proyecto
 
-De los 24 cromos:
-- **20 cromos normales** (diseños únicos y detallados)
-- **4 cromos dorados** (edición limitada con efectos de brillo, partículas y animaciones premium)
+El sitio web [Laminas_123](https://solucionesmaintenance-eng.github.io/Laminas_123/) funciona como un centro de recursos donde los operarios y técnicos de FC SAN BERNARDO pueden acceder a:
+- Guías visuales de mantenimiento.
+- Procedimientos operativos estándar.
+- Láminas técnicas interactivas.
 
-Todo renderizado en tiempo real con **Three.js** para una experiencia 3D fluida y divertida, perfecta para fans de álbumes de cromos digitales.
+## 🛠️ Estructura del Repositorio
 
----
+- `/assets`: Imágenes, diagramas y recursos gráficos de las formaciones.
+- `/docs`: Documentación técnica y manuales en PDF.
+- `index.html`: Portal principal de acceso a las láminas.
 
-## 🎯 Características
+## ⚖️ Licencia
 
-- ✅ Visualización 3D realista con rotación, zoom y luces dinámicas  
-- ✅ 4 cromos dorados con efectos especiales (brillo metálico, partículas doradas y animación de destello)  
-- ✅ Sistema de colección (marca los cromos que ya tienes)  
-- ✅ Galería interactiva con filtro “Dorados” y “Todos”  
-- ✅ Diseño 100% responsive (móvil y escritorio)  
-- ✅ Sonidos y efectos al obtener un cromo dorado  
-- ✅ Modo oscuro automático  
-- ✅ Optimizado para carga rápida (modelos GLB comprimidos)
+Este proyecto está bajo la **Licencia Pública General de GNU v3.0 (GPL-3.0)**. 
 
+### Resumen de la Licencia:
+Usted tiene permiso para:
+- **Uso Comercial:** Puede utilizar este software y sus materiales con fines comerciales.
+- **Modificación:** Puede cambiar el código y los contenidos.
+- **Distribución:** Puede compartir el material original o modificado.
 
+**Bajo las siguientes condiciones:**
+- **Atribución:** Debe dar crédito a los autores originales (Soluciones Maintenance Engineering).
+- **Copyleft:** Si modifica y distribuye el material, debe hacerlo bajo la misma licencia GPL-3.0.
+- **Transparencia:** Debe incluir una copia de la licencia y el código fuente original.
+
+Para más detalles, consulte el archivo `LICENSE` (o visite [https://www.gnu.org/licenses/gpl-3.0.html](https://www.gnu.org/licenses/gpl-3.0.html)).
+
+## 📞 Contacto
+
+**Soluciones Maintenance Engineering** *Desarrollo de formación técnica para FC SAN BERNARDO* Sitio Web: [solucionesmaintenance-eng.github.io](https://solucionesmaintenance-eng.github.io/)
